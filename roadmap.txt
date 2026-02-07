@@ -1,0 +1,67 @@
+Ngày 1: Cài Python, cài pypdf. Viết code đọc được nội dung PDF in ra màn hình console.
+
+Ngày 2: Cài sentence-transformers. Viết code thử ném 1 câu "Con mèo đang ngủ" vào model xem nó in ra cái mảng số trông như thế nào. (Cảm giác nhìn thấy vector lần đầu rất thú vị!).
+
+Ngày 3: Cài chromadb. Thử lưu cái vector đó xuống và query lại xem nó có tìm thấy không.
+
+Ngày 4: Viết GeminiAdapter. Đảm bảo gọi được API Gemini trả lời "Hello World".
+
+Ngày 5: Ráp tất cả lại bằng Facade Pattern.
+
+
+
+Câu hỏi: "Ai là Giám đốc?"
+    ↓
+[Embedding Model] → Vector [0.2, 0.5, ...]
+    ↓
+🔍 Search trong ChromaDB
+    ↓
+Context: "Giám đốc là Nguyễn Văn A..."
+    ↓
+[LLM - Gemini] → "Giám đốc kỹ thuật là Nguyễn Văn A, người có 10 năm kinh nghiệm..."
+
+
+3 chỉ số rpm, tpm, rpd của model
+1. RPM (Requests Per Minute) - Số yêu cầu mỗi phút
+2. TPM (Tokens Per Minute) - Số token mỗi phút
+3. RPD (Requests Per Day) - Số yêu cầu mỗi ngày
+
+
+3 chỉ số config trong genai
+Top-k (Giới hạn số lượng từ)
+Chỉ xét k từ có xác suất cao nhất, bỏ qua phần còn lại.
+
+Top-p / Nucleus Sampling (Giới hạn theo xác suất tích lũy)
+Chọn các từ mà tổng xác suất ≥ p.
+
+Temperature: Là xúc xắc. "Trong đám đã lọc được ở trên, nhắm mắt chọn bừa một thằng (Temperature cao)" hay "Luôn chọn thằng điểm cao nhất (Temperature = 0)".
+ct: probability = softmax(logits / temperature)
+Công thức softmax:
+P(từ_i) = e^(logit_i) / Σ(e^(logit_j))
+
+vd: 
+Bước 1: Chia logits
+"mèo"   4.0 / 1.0 = 4.0
+"chó"   3.0 / 1.0 = 3.0
+"gà"    2.0 / 1.0 = 2.0
+"vịt"   1.0 / 1.0 = 1.0
+→ Giữ nguyên: 4, 3, 2, 1
+
+Bước 2: Softmax
+e^4.0  ≈ 55
+e^3.0  ≈ 20
+e^2.0  ≈ 7
+e^1.0  ≈ 3
+Tổng   ≈ 85
+
+Xác suất:
+"mèo"  55/85 = 0.647 (64.7%)
+"chó"  20/85 = 0.235 (23.5%)
+"gà"   7/85  = 0.082 (8.2%)
+"vịt"  3/85  = 0.035 (3.5%)
+
+→ "mèo" vẫn cao nhất nhưng các từ khác có cơ hội
+
+Thứ tự: Temperature → Top-k → Top-p → Chọn từ
+
+more: https://www.notion.so/3-ph-p-t-nh-kho-ng-c-ch-trong-ChromaDB-3000eb60ed3a801e84e6c5cd3b43333a?source=copy_link
