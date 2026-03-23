@@ -1,14 +1,18 @@
-import google.generativeai as genai
+# check_models.py
 import os
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
-
 api_key = os.getenv("GOOGLE_API_KEY")
-genai.configure(api_key=api_key)
+client = genai.Client(api_key=api_key)
 
-print("📋 DANH SÁCH MODEL CỦA BẠN:")
-for m in genai.list_models():
-    # Chỉ in ra các model hỗ trợ tạo nội dung (generateContent)
-    if 'generateContent' in m.supported_generation_methods:
-        print(f"- Name: {m.name}")
+print(f"--- ĐANG KIỂM TRA VỚI KEY: {api_key[:5]}...{api_key[-5:]} ---")
+
+try:
+    print("Danh sách các model bạn có thể dùng:")
+    for m in client.models.list():
+        # In ra tất cả tên model để mình copy-paste cho chính xác
+        print(f"- {m.name}")
+except Exception as e:
+    print(f"❌ Lỗi khi lấy danh sách: {e}")

@@ -24,8 +24,17 @@ class RAGSystemFacade:
         chunks = self.splitter.split_text(text=text)
         vectors = self.embedding_model.encode(chunks)
 
-        ids = [str(uuid.uuid4) for _ in range(len(chunks))]
+        ids = [str(uuid.uuid4()) for _ in range(len(chunks))]
         metadatas= [{"source": file_path} for _ in range(len(chunks))]
+ 
+        # Khi gọi add_documents, giống như đang xếp một cuốn sách vào thư viện:
+
+        # dán nhãn ID cho nó (ID Index).
+
+        # ghi nó vào danh sách "Sách năm 2024" (Metadata Index).
+
+        # đặt nó vào khu vực "Sách về nấu ăn" dựa trên nội dung của nó (Vector Index)
+
         self.db_client.add_documents(
             vectors=vectors.tolist(),
             collection_name="demo_rag",
@@ -57,10 +66,17 @@ class RAGSystemFacade:
         
         context = "\n\n".join(results['documents'][0])
 
-        print("Gemini đang đọc tài liệu và thinking...")
+        print("AI đang đọc tài liệu và thinking...")
         answer = self.llm.generate_answer(
-            question=question,
-            context=context
+            prompt = f"""
+            Bạn là trợ lý AI. Dựa vào thông tin sau để trả lời câu hỏi. 
+            Nếu không có thông tin, hãy nói "Tôi không biết".
+        
+            THÔNG TIN:
+            {context}
+        
+            CÂU HỎI: {question}
+            """
         )
 
         print("-" * 50)

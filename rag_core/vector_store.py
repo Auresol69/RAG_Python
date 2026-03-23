@@ -28,7 +28,8 @@ class VectorDBClient:
         if ids is None:
             ids = [str(i) for i in range(len(texts))]
 
-        collection.add(
+        # upsert ~ Update + Insert
+        collection.upsert(
             documents=texts,
             embeddings=vectors,
             metadatas=metadatas,

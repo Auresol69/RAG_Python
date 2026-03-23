@@ -1,0 +1,44 @@
+# Python environment
+.venv
+venv
+env
+*.pyc
+__pycache__
+*.pyo
+*.egg-info
+dist
+build
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE & Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.pytest_cache
+.coverage
+htmlcov
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+.env.local
+
+# Development
+.pytest_cache
+.mypy_cache
+node_modules
