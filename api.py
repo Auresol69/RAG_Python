@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from rag_craw import GoldRAGManager
 import os
+import threading
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,9 +27,8 @@ class AskRequest(BaseModel):
     gold_type: str  # sjc, ưu ái, nhẫn...
 
 class AskResponse(BaseModel):
-    question: str
-    answer: str
-    gold_type: str
+    status: str
+    message: str
 
 # ============== Endpoints ==============
 
@@ -56,14 +56,19 @@ def ingest_endpoint(request: IngestRequest):
     """
     try:
         print(f"[API] Bắt đầu nạp dữ liệu từ {request.start_date} đến {request.end_date}")
-        manager.ingest_gold_data(
-            start_date=request.start_date,
-            end_date=request.end_date,
-            gold_type=request.gold_type
+        thread = threading.Thread(
+            target=manager.ingest_gold_data,
+            kwargs={
+                "start_date": request.start_date,
+                "end_date": request.end_date,
+                "gold_type": request.gold_type,
+            },
+            daemon=True,
         )
+        thread.start()
         return IngestResponse(
-            status="success",
-            message=f"Đã nạp dữ liệu vàng {request.gold_type} thành công"
+            status="accepted",
+            message=f"Đang nạp dữ liệu vàng {request.gold_type} từ {request.start_date} đến {request.end_date}"
         )
     except Exception as e:
         print(f"[API] Lỗi nạp dữ liệu: {e}")
@@ -82,15 +87,16 @@ def ask_endpoint(request: AskRequest):
     """
     try:
         print(f"[API] Trả lời câu hỏi: {request.question}")
-        answer = manager.ask(
-            question=request.question,
-            gold_type=request.gold_type
+        thread = threading.Thread(
+            target=manager.ask,
+            kwargs={
+                "question": request.question,
+                "gold_type": request.gold_type,
+            },
+            daemon=True,
         )
-        return AskResponse(
-            question=request.question,
-            answer=answer,
-            gold_type=request.gold_type
-        )
+        thread.start()
+        return AskResponse(status="accepted", message=f"Đang phân tích giá vàng {request.gold_type}")
     except Exception as e:
         print(f"[API] Lỗi trả lời câu hỏi: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi trả lời câu hỏi: {str(e)}")

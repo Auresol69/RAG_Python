@@ -4,6 +4,8 @@ from rag_core.generator import GeminiAdapter
 from google import genai
 import os
 from dotenv import load_dotenv
+import requests
+import logging
 
 load_dotenv()
 
@@ -54,7 +56,30 @@ class GoldRAGManager:
                     metadatas=metadatas,
                     ids=ids
                 )
-            print(f"Đã nạp xong {len(texts)} ngày dữ liệu vàng {gold_type} vào ChromaDB!")
+            logging.info(f"Đã nạp xong {len(texts)} ngày dữ liệu vàng {gold_type} vào ChromaDB!")
+        callback_url = "http://n8n:5678/webhook/crawl-finished"
+        try:
+            success_payload = {
+                "intent": "NAP_DATA",
+                "status": "success",
+                "message": f"Đã nạp xong vàng {gold_type} từ {start_date} đến {end_date}"
+                }
+            try:
+                requests.post(callback_url, json=success_payload, timeout=10)
+                logging.info(f"Successfully sent success callback to {callback_url}")
+            except requests.RequestException as e:
+                logging.error(f"Failed to send success callback {e}")              
+
+        except Exception as e:
+            error_payload = {
+                "status": "error",
+                "message": str(e)
+            }
+            try:
+                requests.post(callback_url, json=error_payload, timeout=10)
+                logging.info(f"Successfully sent error callback to {callback_url}")
+            except requests.RequestException as e:
+                logging.error(f"Failed to send error callback: {e}")
 
     def ask(self, question, gold_type):
         query_vector = self.llm.embed_content(
@@ -62,8 +87,10 @@ class GoldRAGManager:
             contents=question,
             config={'task_type': 'RETRIEVAL_QUERY'}
         )
+        callback_url = "http://n8n:5678/webhook/crawl-finished"
 
         if not query_vector:
+            requests.post(callback_url, {"status": "error", "message":"Ní ơi, lỗi tạo vector rồi, không tìm dữ liệu được!"}) 
             return "Ní ơi, lỗi tạo vector rồi, không tìm dữ liệu được!"
 
         results = self.db_client.search(
@@ -71,11 +98,14 @@ class GoldRAGManager:
             query_vector=query_vector,
             n_results=5
         )
-        print(f"DEBUG - Các ngày tìm thấy: {results['metadatas'][0]}")
+        logging.info(f"DEBUG - Các ngày tìm thấy: {results['metadatas'][0]}")
 
         if not results['documents'][0]:
+            requests.post(callback_url, {"status": "error", "message":"Tui không thấy data này trong kho ní ơi."}) 
             return "Tui không thấy data này trong kho ní ơi."
         
+        # matplotlib
+
         context = "\n\n".join(results['documents'][0])
         
         prompt = f"""
@@ -92,7 +122,8 @@ class GoldRAGManager:
 
         answer = self.llm.generate_answer(prompt=prompt)
 
-        return answer
+
+        requests.post(callback_url, {"intent": "PHAN_TICH","status": "success", "message": f"{answer}"})
     
 if __name__ == "__main__":
     # manager = GoldRAGManager(data_dir="./app/datas")

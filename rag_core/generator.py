@@ -20,7 +20,7 @@ class GeminiAdapter:
             "top_p": 0.9,
             "max_output_tokens": 8192
         }
-        self.ollama_client = Client(host='http://ollama:11434')
+        self.ollama_client = Client(host= os.getenv("OLLAMA_HOST"))
         self.model_name = model_name
 
     def embed_content(self, model, contents, config):
