@@ -17,6 +17,7 @@ class IngestRequest(BaseModel):
     start_date: str  # YYYY-MM-DD
     end_date: str    # YYYY-MM-DD
     gold_type: str   # sjc, ưu ái, nhẫn...
+    chat_id: str
 
 class IngestResponse(BaseModel):
     status: str
@@ -25,6 +26,7 @@ class IngestResponse(BaseModel):
 class AskRequest(BaseModel):
     question: str
     gold_type: str  # sjc, ưu ái, nhẫn...
+    chat_id: str
 
 class AskResponse(BaseModel):
     status: str
@@ -62,6 +64,7 @@ def ingest_endpoint(request: IngestRequest):
                 "start_date": request.start_date,
                 "end_date": request.end_date,
                 "gold_type": request.gold_type,
+                "chat_id": request.chat_id
             },
             daemon=True,
         )
@@ -92,6 +95,7 @@ def ask_endpoint(request: AskRequest):
             kwargs={
                 "question": request.question,
                 "gold_type": request.gold_type,
+                "chat_id": request.chat_id
             },
             daemon=True,
         )
